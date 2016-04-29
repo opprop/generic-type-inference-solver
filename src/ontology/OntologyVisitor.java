@@ -26,15 +26,11 @@ public class OntologyVisitor extends InferenceVisitor<OntologyChecker, BaseAnnot
 
     @Override
     public Void visitVariable(VariableTree node, Void p) {
+        int weight = 50;
         AnnotatedTypeMirror type = atypeFactory.getAnnotatedType(node);
-        ConstraintManager cManager = InferenceMain.getInstance().getConstraintManager();
-        SlotManager sManager = InferenceMain.getInstance().getSlotManager();
-        VariableSlot vSlot = sManager.getVariableSlot(type);
         AnnotationMirror anno = OntologyUtils.determineAnnotation(elements, type.getUnderlyingType());
         if (anno != null) {
-            // JLTODO: Is it good to use 'new ConstantSlot' here instead of the
-            // 'variableAnnotator.createConstant' used in the ATF?
-            cManager.add(new PreferenceConstraint(vSlot, new ConstantSlot(anno, sManager.nextId()), 50));
+            this.addPreference(type, anno, weight);
         }
         return super.visitVariable(node, p);
     }
