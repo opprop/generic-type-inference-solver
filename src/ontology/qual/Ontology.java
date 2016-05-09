@@ -6,9 +6,11 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
 
-@OntologyMapping("SortedSequence")
 @Documented
-@Target({ElementType.TYPE_USE, ElementType.TYPE_PARAMETER})
-@SubtypeOf({OntologyTop.class})
-public @interface SortedSequence {
+@Target({ ElementType.TYPE_USE, ElementType.TYPE_PARAMETER })
+// @Target({ElementType.TYPE_USE})
+@SubtypeOf({ OntologyTop.class })
+
+public @interface Ontology {
+    String[] typeNames() default {};
 }
