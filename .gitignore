@@ -12,9 +12,12 @@ scripts/CNFfiles/
 src/generalconstraintsolver/dataflowsolver/logicdata/
 src/generalconstraintsolver/logiqlsubsolver/logicdata/
 scripts/annotated/
-scripts/*.java
+scripts/**/*.java
 scripts/ontology/roundtripOntologyMaxSat.sh
 scripts/ontology/runOntologyGe.sh
 **/logiqldata/
 **/CNFfiles/
 **/annotated/
+**/logs
+**/cnfData
+**/dljc-out

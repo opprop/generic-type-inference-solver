@@ -1,5 +1,7 @@
 package constraintsolver;
 
+import java.lang.reflect.Constructor;
+
 import checkers.inference.model.CombVariableSlot;
 import checkers.inference.model.CombineConstraint;
 import checkers.inference.model.ComparableConstraint;
@@ -26,13 +28,18 @@ import checkers.inference.model.VariableSlot;
 public class ConstraintSerializer<S, T> implements Serializer<S, T> {
 
     public Serializer<S, T> realSerializer;
+    protected Lattice lattice;
 
-    public ConstraintSerializer(String backEndType) {
+    @SuppressWarnings("unchecked")
+    public ConstraintSerializer(String backEndType, Lattice lattice) {
+        this.lattice = lattice;
         try {
+            if (backEndType.equals("maxsatbackend.Lingeling")) {
+                backEndType = "maxsatbackend.MaxSat";
+            }
             Class<?> serializerClass = Class.forName(backEndType + "Serializer");
-            @SuppressWarnings("unchecked")
-            Serializer<S, T> createdSerializer = (Serializer<S, T>) serializerClass.newInstance();
-            realSerializer = createdSerializer;
+            Constructor<?> cons = serializerClass.getConstructor(Lattice.class);
+            realSerializer = (Serializer<S, T>)cons.newInstance(lattice);
         } catch (Exception e) {
             e.printStackTrace();
         }
