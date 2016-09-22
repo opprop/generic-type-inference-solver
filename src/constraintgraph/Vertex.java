@@ -1,7 +1,7 @@
 package constraintgraph;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
 
@@ -17,13 +17,15 @@ import checkers.inference.model.VariableSlot;
  */
 public class Vertex {
 
-    private Set<Edge> edges;
+    private List<Edge> incomingEdges;
+    private List<Edge> outgoingEdges;
     private Slot slot;
     private int id;
     private AnnotationMirror value;
 
-    protected Vertex(Slot slot) {
-        this.edges = new HashSet<Edge>();
+    public Vertex(Slot slot) {
+        this.incomingEdges = new ArrayList<Edge>();
+        this.outgoingEdges = new ArrayList<Edge>();
         this.slot = slot;
 
         if (slot instanceof VariableSlot) {
@@ -38,13 +40,19 @@ public class Vertex {
         }
     }
 
-    protected boolean isConstant() {
+    public boolean isConstant() {
         return (this.slot instanceof ConstantSlot);
     }
 
-    protected void addEdge(Edge edge) {
-        if (!edges.contains(edge)) {
-            edges.add(edge);
+    public void addIncomingEdge(Edge incomingEdge) {
+        if (!incomingEdges.contains(incomingEdge)) {
+            incomingEdges.add(incomingEdge);
+        }
+    }
+
+    public void addOutgoingEdge(Edge outgoingEdge) {
+        if (!outgoingEdges.contains(outgoingEdge)) {
+            outgoingEdges.add(outgoingEdge);
         }
     }
 
@@ -52,12 +60,16 @@ public class Vertex {
         return this.slot;
     }
 
-    protected int getId() {
+    public int getId() {
         return this.id;
     }
 
-    protected Set<Edge> getEdges() {
-        return this.edges;
+    public List<Edge> getIncomingEdges() {
+        return this.incomingEdges;
+    }
+
+    public List<Edge> getOutgoingEdge() {
+        return this.outgoingEdges;
     }
 
     public AnnotationMirror getValue() {
@@ -78,8 +90,4 @@ public class Vertex {
         }
     }
 
-    @Override
-    public int hashCode() {
-        return id;
-    }
 }

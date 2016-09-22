@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import dataflow.solvers.classic.DatatypeSolution;
+import dataflow.solver.DatatypeSolution;
 import dataflow.util.DataflowUtils;
 
 public class DataflowSatSolver extends DataflowGeneralSolver {

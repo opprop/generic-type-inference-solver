@@ -1,16 +1,17 @@
 package checkers.inference;
 
+import checkers.inference.test.CFInferenceTest;
+
 import org.checkerframework.framework.test.TestUtilities;
 import org.checkerframework.javacutil.Pair;
+
+import org.junit.runners.Parameterized.Parameters;
+
+import dataflow.solver.DataflowSolver;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import dataflow.solvers.classic.DataflowSolver;
-
-import org.junit.runners.Parameterized.Parameters;
-
-import checkers.inference.test.CFInferenceTest;
 
 public class DataflowTest extends CFInferenceTest {
 

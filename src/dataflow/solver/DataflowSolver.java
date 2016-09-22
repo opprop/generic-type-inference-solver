@@ -1,4 +1,4 @@
-package dataflow.solvers.classic;
+package dataflow.solver;
 
 import org.checkerframework.framework.type.QualifierHierarchy;
 import org.checkerframework.javacutil.AnnotationUtils;
@@ -49,7 +49,7 @@ public class DataflowSolver implements InferenceSolver {
         List<DatatypeSolver> dataflowSolvers = new ArrayList<>();
 
         // Configure datatype solvers
-        for (Map.Entry<Vertex, Set<Constraint>> entry : constraintGraph.getConstantPath().entrySet()) {
+        for (Map.Entry<Vertex, Set<Constraint>> entry : constraintGraph.getIndependentPath().entrySet()) {
             AnnotationMirror anno = entry.getKey().getValue();
             if (AnnotationUtils.areSameIgnoringValues(anno, DATAFLOW)) {
                 String[] dataflowValues = DataflowUtils.getTypeNames(anno);
@@ -64,6 +64,10 @@ public class DataflowSolver implements InferenceSolver {
             }
         }
 
+        // List<DatatypeSolution> solutions = new ArrayList<>();
+        // for (DatatypeSolver solver : dataflowSolvers) {
+        // solutions.add(solver.solve());
+        // }
         List<DatatypeSolution> solutions = new ArrayList<>();
         try {
             if (dataflowSolvers.size() > 0) {

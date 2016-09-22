@@ -4,7 +4,6 @@ import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.util.AnnotationBuilder;
 import org.checkerframework.javacutil.AnnotationUtils;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,7 +37,7 @@ public class DataflowUtils {
         return getDataflowValue(type, "typeNameRoots");
     }
 
-    public static AnnotationMirror createDataflowAnnotationForByte(String[] dataType,
+    private static AnnotationMirror createDataflowAnnotationForByte(String[] dataType,
             ProcessingEnvironment processingEnv) {
         AnnotationBuilder builder = new AnnotationBuilder(processingEnv, DataFlow.class);
         builder.setValue("typeNameRoots", dataType);
@@ -187,12 +186,5 @@ public class DataflowUtils {
         AnnotationMirror dataFlowType = createDataflowAnnotation(
                     datatypeInArray, processingEnv);
         return dataFlowType;
-    }
-
-    public static AnnotationMirror createDataflowAnnotation(String typeName, ProcessingEnvironment processingEnv) {
-        Set<String> typeNames = new HashSet<String>();
-        typeNames.add(typeName);
-        AnnotationMirror am = DataflowUtils.createDataflowAnnotation(typeNames, processingEnv);
-        return am;
     }
 }

@@ -1,4 +1,4 @@
-package dataflow.solvers.classic;
+package dataflow.solver;
 
 import java.util.HashMap;
 import java.util.Map;

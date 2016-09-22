@@ -28,12 +28,10 @@ public class DecodingTool {
     private final Map<Integer, AnnotationMirror> result = new HashMap<Integer, AnnotationMirror>();
     private final String path;
     private final Set<Integer> varSlotIds;
-    private final Lattice lattice;
 
-    public DecodingTool(Set<Integer> varSlotIds, String path, Lattice lattice) {
+    public DecodingTool(Set<Integer> varSlotIds, String path) {
         this.varSlotIds = varSlotIds;
         this.path = path;
-        this.lattice = lattice;
     }
 
     public Map<Integer, AnnotationMirror> decodeResult() {
@@ -76,13 +74,13 @@ public class DecodingTool {
      */
     private void setDefault() {
         for (Integer varSlotId : varSlotIds) {
-            result.put(varSlotId, lattice.top);
+            result.put(varSlotId, Lattice.top);
         }
     }
 
     private Map<String, AnnotationMirror> mapStringToAnnoMirror() {
         Map<String, AnnotationMirror> nameMap = new HashMap<String, AnnotationMirror>();
-        for (AnnotationMirror annoMirror : lattice.getAllTypes()) {
+        for (AnnotationMirror annoMirror : Lattice.allTypes) {
             String simpleName = NameUtils.getSimpleName(annoMirror);
             nameMap.put(simpleName, annoMirror);
         }
