@@ -47,84 +47,88 @@ public class MaxSatSerializer implements Serializer<VecInt[], VecInt[]> {
 
     @Override
     public VecInt[] serialize(SubtypeConstraint constraint) {
+        return new SubtypeVariableCombos(emptyClauses).accept(constraint.getSubtype(), constraint.getSupertype(), constraint);
+    }
 
+    protected class SubtypeVariableCombos extends VariableCombos<SubtypeConstraint, VecInt[]> {
         final Set<AnnotationMirror> mustNotBe = new HashSet<AnnotationMirror>();
 
-        return new VariableCombos<SubtypeConstraint, VecInt[]>(emptyClauses) {
-            @Override
-            protected VecInt[] constant_variable(ConstantSlot subtype, VariableSlot supertype, SubtypeConstraint constraint) {
-                if (ConstantUtils.areSameType(subtype.getValue(), lattice.top)) {
-                    return VectorUtils.asVecArray(MathUtils.mapIdToMatrixEntry(supertype.getId(), lattice.top, lattice));
-                }
-                if (lattice.subType.get(subtype.getValue()) != null) {
-                    mustNotBe.addAll(lattice.subType.get(subtype.getValue()));
-                }
+        public SubtypeVariableCombos(VecInt[] emptyValue) {
+            super(emptyValue);
+        }
 
-                if (lattice.incomparableType.keySet().contains(subtype.getValue())) {
-                    mustNotBe.addAll(lattice.incomparableType.get(subtype.getValue()));
-                }
-                return getMustNotBe(mustNotBe, supertype, subtype);
+        @Override
+        protected VecInt[] constant_variable(ConstantSlot subtype, VariableSlot supertype, SubtypeConstraint constraint) {
+            if (ConstantUtils.areSameType(subtype.getValue(), lattice.top)) {
+                return VectorUtils.asVecArray(MathUtils.mapIdToMatrixEntry(supertype.getId(), lattice.top, lattice));
+            }
+            if (lattice.subType.get(subtype.getValue()) != null) {
+                mustNotBe.addAll(lattice.subType.get(subtype.getValue()));
             }
 
-            @Override
-            protected VecInt[] variable_constant(VariableSlot subtype, ConstantSlot supertype, SubtypeConstraint constraint) {
+            if (lattice.incomparableType.keySet().contains(subtype.getValue())) {
+                mustNotBe.addAll(lattice.incomparableType.get(subtype.getValue()));
+            }
+            return getMustNotBe(mustNotBe, supertype, subtype);
+        }
 
-                if (ConstantUtils.areSameType(supertype.getValue(), lattice.bottom)) {
-                    return VectorUtils.asVecArray(MathUtils.mapIdToMatrixEntry(subtype.getId(), lattice.bottom, lattice));
-                }
-                
-                if (lattice.superType.get(supertype.getValue()) != null) {
-                    mustNotBe.addAll(lattice.superType.get(supertype.getValue()));
-                }
-                if (lattice.incomparableType.keySet().contains(supertype.getValue())) {
-                    mustNotBe.addAll(lattice.incomparableType.get(supertype.getValue()));
-                }
-                return getMustNotBe(mustNotBe, subtype, supertype);
+        @Override
+        protected VecInt[] variable_constant(VariableSlot subtype, ConstantSlot supertype, SubtypeConstraint constraint) {
+
+            if (ConstantUtils.areSameType(supertype.getValue(), lattice.bottom)) {
+                return VectorUtils.asVecArray(MathUtils.mapIdToMatrixEntry(subtype.getId(), lattice.bottom, lattice));
             }
 
-            @Override
-            protected VecInt[] variable_variable(VariableSlot subtype,  VariableSlot supertype, SubtypeConstraint constraint) {
-
-                // if subtype is top, then supertype is top.
-                // if supertype is bottom, then subtype is bottom.
-                VecInt supertypeOfTop = VectorUtils.asVec(
-                        -MathUtils.mapIdToMatrixEntry(subtype.getId(), lattice.top, lattice),
-                        MathUtils.mapIdToMatrixEntry(supertype.getId(), lattice.top, lattice));
-                VecInt subtypeOfBottom = VectorUtils.asVec(
-                        -MathUtils.mapIdToMatrixEntry(supertype.getId(), lattice.bottom, lattice),
-                        MathUtils.mapIdToMatrixEntry(subtype.getId(), lattice.bottom, lattice));
-
-                List<VecInt> resultList = new ArrayList<VecInt>();
-                for (AnnotationMirror type : lattice.getAllTypes()) {
-                    // if we know subtype
-                    if (!ConstantUtils.areSameType(type, lattice.top)) {
-                        resultList.add(VectorUtils.asVec(getMaybe(type, subtype, supertype,
-                                lattice.superType.get(type))));
-                    }
-
-                    // if we know supertype
-                    if (!ConstantUtils.areSameType(type, lattice.bottom)) {
-                        resultList.add(VectorUtils.asVec(getMaybe(type, supertype, subtype,
-                                lattice.subType.get(type))));
-                    }
-                }
-                resultList.add(supertypeOfTop);
-                resultList.add(subtypeOfBottom);
-                VecInt[] result = resultList.toArray(new VecInt[resultList.size()]);
-                return result;
+            if (lattice.superType.get(supertype.getValue()) != null) {
+                mustNotBe.addAll(lattice.superType.get(supertype.getValue()));
             }
+            if (lattice.incomparableType.keySet().contains(supertype.getValue())) {
+                mustNotBe.addAll(lattice.incomparableType.get(supertype.getValue()));
+            }
+            return getMustNotBe(mustNotBe, subtype, supertype);
+        }
 
-            @Override
-            protected VecInt[] constant_constant(ConstantSlot subtype, ConstantSlot supertype,
-                    SubtypeConstraint constraint) {
+        @Override
+        protected VecInt[] variable_variable(VariableSlot subtype,  VariableSlot supertype, SubtypeConstraint constraint) {
+
+            // if subtype is top, then supertype is top.
+            // if supertype is bottom, then subtype is bottom.
+            VecInt supertypeOfTop = VectorUtils.asVec(
+                    -MathUtils.mapIdToMatrixEntry(subtype.getId(), lattice.top, lattice),
+                    MathUtils.mapIdToMatrixEntry(supertype.getId(), lattice.top, lattice));
+            VecInt subtypeOfBottom = VectorUtils.asVec(
+                    -MathUtils.mapIdToMatrixEntry(supertype.getId(), lattice.bottom, lattice),
+                    MathUtils.mapIdToMatrixEntry(subtype.getId(), lattice.bottom, lattice));
+
+            List<VecInt> resultList = new ArrayList<VecInt>();
+            for (AnnotationMirror type : lattice.getAllTypes()) {
+                // if we know subtype
+                if (!ConstantUtils.areSameType(type, lattice.top)) {
+                    resultList.add(VectorUtils.asVec(getMaybe(type, subtype, supertype,
+                            lattice.superType.get(type))));
+                }
+
+                // if we know supertype
+                if (!ConstantUtils.areSameType(type, lattice.bottom)) {
+                    resultList.add(VectorUtils.asVec(getMaybe(type, supertype, subtype,
+                            lattice.subType.get(type))));
+                }
+            }
+            resultList.add(supertypeOfTop);
+            resultList.add(subtypeOfBottom);
+            VecInt[] result = resultList.toArray(new VecInt[resultList.size()]);
+            return result;
+        }
+
+        @Override
+        protected VecInt[] constant_constant(ConstantSlot subtype, ConstantSlot supertype,
+                SubtypeConstraint constraint) {
 //                if (!ConstantUtils.checkConstant(subtype, supertype, constraint)) {
 //                    ErrorReporter.errorAbort("Confliction in subtype constraint: " + subtype.getValue()
 //                            + " is not subtype of " + supertype.getValue());
 //                }
-                return defaultAction(subtype, supertype, constraint);
-            }
-
-        }.accept(constraint.getSubtype(), constraint.getSupertype(), constraint);
+            return defaultAction(subtype, supertype, constraint);
+        }
     }
 
     /**
@@ -233,90 +237,97 @@ public class MaxSatSerializer implements Serializer<VecInt[], VecInt[]> {
 
     @Override
     public VecInt[] serialize(InequalityConstraint constraint) {
-        return new VariableCombos<InequalityConstraint, VecInt[]>(emptyClauses) {
+        return new InequalityVariableCombos(emptyClauses).accept(constraint.getFirst(), constraint.getSecond(), constraint);
+    }
 
-            @Override
-            protected VecInt[] constant_variable(ConstantSlot slot1, VariableSlot slot2, InequalityConstraint constraint) {
-                if (lattice.getAllTypes().contains(slot1.getValue())) {
-                    return VectorUtils.asVecArray(-MathUtils.mapIdToMatrixEntry(slot2.getId(),
-                            slot1.getValue(), lattice));
-                } else {
-                    return emptyClauses;
+    protected class InequalityVariableCombos extends VariableCombos<InequalityConstraint, VecInt[]> {
+        public InequalityVariableCombos(VecInt[] emptyValue) {
+            super(emptyValue);
+        }
+
+        @Override
+        protected VecInt[] constant_variable(ConstantSlot slot1, VariableSlot slot2, InequalityConstraint constraint) {
+            if (lattice.getAllTypes().contains(slot1.getValue())) {
+                return VectorUtils.asVecArray(-MathUtils.mapIdToMatrixEntry(slot2.getId(),
+                        slot1.getValue(), lattice));
+            } else {
+                return emptyClauses;
+            }
+        }
+
+        @Override
+        protected VecInt[] variable_constant(VariableSlot slot1, ConstantSlot slot2, InequalityConstraint constraint) {
+            return constant_variable(slot2, slot1, constraint);
+        }
+
+        @Override
+        protected VecInt[] variable_variable(VariableSlot slot1, VariableSlot slot2, InequalityConstraint constraint) {
+            // a <=> !b which is the same as (!a v !b) & (b v a)
+            VecInt[] result = new VecInt[lattice.numTypes * 2];
+            int i = 0;
+            for (AnnotationMirror type : lattice.getAllTypes()) {
+                if (lattice.getAllTypes().contains(type)) {
+                    result[i] = VectorUtils.asVec(
+                            -MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice),
+                            -MathUtils.mapIdToMatrixEntry(slot2.getId(), type, lattice));
+                    result[i + 1] = VectorUtils.asVec(
+                            MathUtils.mapIdToMatrixEntry(slot2.getId(), type, lattice),
+                            MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice));
+                    i = i + 2;
                 }
             }
+            return result;
+        }
 
-            @Override
-            protected VecInt[] variable_constant(VariableSlot slot1, ConstantSlot slot2, InequalityConstraint constraint) {
-                return constant_variable(slot2, slot1, constraint);
-            }
-
-            @Override
-            protected VecInt[] variable_variable(VariableSlot slot1, VariableSlot slot2, InequalityConstraint constraint) {
-                // a <=> !b which is the same as (!a v !b) & (b v a)
-                VecInt[] result = new VecInt[lattice.numTypes * 2];
-                int i = 0;
-                for (AnnotationMirror type : lattice.getAllTypes()) {
-                    if (lattice.getAllTypes().contains(type)) {
-                        result[i] = VectorUtils.asVec(
-                                -MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice),
-                                -MathUtils.mapIdToMatrixEntry(slot2.getId(), type, lattice));
-                        result[i + 1] = VectorUtils.asVec(
-                                MathUtils.mapIdToMatrixEntry(slot2.getId(), type, lattice),
-                                MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice));
-                        i = i + 2;
-                    }
-                }
-                return result;
-            }
-            
-            @Override
-            protected VecInt[] constant_constant(ConstantSlot slot1, ConstantSlot slot2, InequalityConstraint constraint) {
+        @Override
+        protected VecInt[] constant_constant(ConstantSlot slot1, ConstantSlot slot2, InequalityConstraint constraint) {
 //                if (!ConstantUtils.checkConstant(slot1, slot2, constraint)) {
 //                    ErrorReporter.errorAbort("Confliction in inequality constraint: " + slot1.getValue()
 //                            + " is equal to " + slot2.getValue());
 //                }
 
-                return defaultAction(slot1, slot2, constraint);
-            }
-
-        }.accept(constraint.getFirst(), constraint.getSecond(), constraint);
+            return defaultAction(slot1, slot2, constraint);
+        }
     }
 
-
     @Override
-    public VecInt[] serialize(ComparableConstraint comparableConstraint) {
-        ComparableConstraint constraint = comparableConstraint;
-        return new VariableCombos<ComparableConstraint, VecInt[]>(emptyClauses) {
-            @Override
-            protected VecInt[] variable_variable(VariableSlot slot1, VariableSlot slot2, ComparableConstraint constraint) {
-                // a <=> !b which is the same as (!a v !b) & (b v a)
-                List<VecInt> list = new ArrayList<VecInt>();
-                for (AnnotationMirror type : lattice.getAllTypes()) {
-                    if (lattice.incomparableType.keySet().contains(type)) {
-                        for (AnnotationMirror notComparable : lattice.incomparableType.get(type)) {
-                            list.add(VectorUtils.asVec(
-                                    -MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice),
-                                    -MathUtils.mapIdToMatrixEntry(slot2.getId(), notComparable, lattice),
-                                    MathUtils.mapIdToMatrixEntry(slot2.getId(), notComparable, lattice),
-                                    MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice)));
-                        }
+    public VecInt[] serialize(ComparableConstraint constraint) {
+        return new ComparableVariableCombos(emptyClauses).accept(constraint.getFirst(), constraint.getSecond(), constraint);
+    }
+
+    protected class ComparableVariableCombos extends VariableCombos<ComparableConstraint, VecInt[]> {
+        public ComparableVariableCombos(VecInt[] emptyValue) {
+            super(emptyValue);
+        }
+
+        @Override
+        protected VecInt[] variable_variable(VariableSlot slot1, VariableSlot slot2, ComparableConstraint constraint) {
+            // a <=> !b which is the same as (!a v !b) & (b v a)
+            List<VecInt> list = new ArrayList<VecInt>();
+            for (AnnotationMirror type : lattice.getAllTypes()) {
+                if (lattice.incomparableType.keySet().contains(type)) {
+                    for (AnnotationMirror notComparable : lattice.incomparableType.get(type)) {
+                        list.add(VectorUtils.asVec(
+                                -MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice),
+                                -MathUtils.mapIdToMatrixEntry(slot2.getId(), notComparable, lattice),
+                                MathUtils.mapIdToMatrixEntry(slot2.getId(), notComparable, lattice),
+                                MathUtils.mapIdToMatrixEntry(slot1.getId(), type, lattice)));
                     }
                 }
-                VecInt[] result = list.toArray(new VecInt[list.size()]);
-                return result;
             }
-            
-            @Override
-            protected VecInt[] constant_constant(ConstantSlot slot1, ConstantSlot slot2, ComparableConstraint constraint) {
+            VecInt[] result = list.toArray(new VecInt[list.size()]);
+            return result;
+        }
+
+        @Override
+        protected VecInt[] constant_constant(ConstantSlot slot1, ConstantSlot slot2, ComparableConstraint constraint) {
 //                if (!ConstantUtils.checkConstant(slot1, slot2, constraint)) {
 //                    ErrorReporter.errorAbort("Confliction in comparable constraint: " + slot1.getValue()
 //                            + " is not comparable to " + slot2.getValue());
 //                }
 
-                return defaultAction(slot1, slot2, constraint);
-            }
-
-        }.accept(constraint.getFirst(), constraint.getSecond(), constraint);
+            return defaultAction(slot1, slot2, constraint);
+        }
     }
 
 
