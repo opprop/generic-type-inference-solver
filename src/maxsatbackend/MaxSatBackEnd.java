@@ -5,20 +5,17 @@ import org.checkerframework.framework.type.QualifierHierarchy;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 
 import org.sat4j.core.VecInt;
+import org.sat4j.maxsat.SolverFactory;
 import org.sat4j.maxsat.WeightedMaxSatDecorator;
+import org.sat4j.specs.ISolver;
+import org.sat4j.tools.xplain.DeletionStrategy;
+import org.sat4j.tools.xplain.Xplain;
 
 import util.MathUtils;
 import util.StatisticPrinter;
@@ -40,10 +37,15 @@ import constraintsolver.Lattice;
 public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
 
     protected final SlotManager slotManager;
+    protected final Map<Integer, Constraint> clauseConstraintMap = new HashMap<>();
     protected final List<VecInt> hardClauses = new LinkedList<VecInt>();
     protected final List<VecInt> softClauses = new LinkedList<VecInt>();
     protected final File CNFData = new File(new File("").getAbsolutePath() + "/cnfData");
     protected StringBuilder CNFInput = new StringBuilder();
+
+    // Whether we should compute the minimum unsatisfiable constraints
+    // and output a more useful error in the case of an unsolvable set of constraints.
+    private boolean explainUnsolvable;
 
     private long serializationStart;
     private long serializationEnd;
@@ -61,6 +63,8 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
         if (shouldOutputCNF()) {
             CNFData.mkdir();
         }
+
+        explainUnsolvable = "true".equals(configuration.get("explain"));
     }
 
     protected boolean shouldOutputCNF() {
@@ -123,6 +127,9 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
                         softClauses.add(res);
                     } else {
                         hardClauses.add(res);
+                        if (explainUnsolvable) {
+                            clauseConstraintMap.put(hardClauses.size(), constraint);
+                        }
                     }
                 }
             }
@@ -188,8 +195,13 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             for (VecInt hardClause : hardClauses) {
                 solver.addHardClause(hardClause);
             }
-            // saving memory of JVM...
-            this.hardClauses.clear();
+
+            // We need the clauses to create the solver for an
+            // explanation in the case of a failure
+            if (!explainUnsolvable) {
+                // saving memory of JVM...
+                this.hardClauses.clear();
+            }
 
             for (VecInt softclause : softClauses) {
                 solver.addSoftClause(softclause);
@@ -215,12 +227,49 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             }
 
             if (isSatisfiable) {
-            // saving memory of JVM...
-            this.softClauses.clear();
+                // saving memory of JVM...
+                this.softClauses.clear();
                 result = decode(solver.model());
                 // PrintUtils.printResult(result);
             } else {
                 System.out.println("Not solvable!");
+                if (explainUnsolvable) {
+
+                    // Unfortunately we can't use our existing solver
+                    // since the Xplain framework doesn't work with WeightedMaxSatDecorator.
+                    // Thus, in the hopefully rare case of encountering an unsolvable set of contraints
+                    // we create a new regular solver instance and feed it just the hard clauses.
+                    Xplain<ISolver> xplainer = new Xplain<ISolver>(SolverFactory.newDefault());
+                    xplainer.setMinimizationStrategy(new DeletionStrategy());
+                    configureSatSolver(xplainer);
+
+                    for (VecInt clause : this.hardClauses) {
+                        xplainer.addClause(clause);
+                    }
+
+                    if (!xplainer.isSatisfiable()) {
+                        int[] indicies = xplainer.minimalExplanation();
+                        Set<Constraint> seenConstraints = new HashSet<>();
+
+                        System.out.println("Inference failed because of the following inconsistent constraints:");
+
+                        for (int clause : indicies) {
+                            Constraint constraint = clauseConstraintMap.get(clause);
+                            if (constraint == null || seenConstraints.contains(constraint)) {
+                                continue;
+                            }
+
+                            System.out.println("\t" + constraint + " @ " + constraint.getLocation().toString());
+
+                            seenConstraints.add(constraint);
+                        }
+                    } else {
+                        // We really shouldn't ever hit this case as we've already determined the
+                        // original instance was unsolvable. So too should xplainer.
+                    }
+
+                    System.exit(2);
+                }
             }
 
         } catch (Throwable e) {
@@ -236,7 +285,7 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
      *
      * @param solver
      */
-    private void configureSatSolver(WeightedMaxSatDecorator solver) {
+    private void configureSatSolver(ISolver solver) {
         final int totalVars = (slotManager.getNumberOfSlots() * lattice.numTypes);
         final int totalClauses = hardClauses.size() + softClauses.size();
 
