@@ -211,10 +211,9 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             boolean isSatisfiable = solver.isSatisfiable();
             this.solvingEnd = System.currentTimeMillis();
 
-            boolean graph = (configuration.get("useGraph") == null || configuration.get("useGraph")
-                    .equals("true")) ? true : false;
-            boolean parallel = (configuration.get("solveInParallel") == null || configuration.get(
-                    "solveInParallel").equals("true")) ? true : false;
+            boolean graph = configuration.get("useGraph") == null || configuration.get("useGraph").equals("true");
+            boolean parallel = configuration.get("solveInParallel") == null ||
+                    configuration.get("solveInParallel").equals("true");
             long solvingTime = solvingEnd - solvingStart;
             if (graph) {
                 if (parallel) {
