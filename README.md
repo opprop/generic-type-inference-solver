@@ -1,3 +1,9 @@
+Status of Master
+===========================
+
+[![build-status](https://travis-ci.org/opprop/generic-type-inference-solver.svg?branch=master)](https://travis-ci.org/opprop/generic-type-inference-solver)
+
+
 Dataflow type system README
 ===========================
 
