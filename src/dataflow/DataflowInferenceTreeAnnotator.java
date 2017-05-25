@@ -2,6 +2,7 @@ package dataflow;
 
 import org.checkerframework.framework.type.AnnotatedTypeFactory;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
+import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedArrayType;
 import org.checkerframework.framework.util.AnnotationBuilder;
 import org.checkerframework.javacutil.ElementUtils;
 import org.checkerframework.javacutil.TreeUtils;
@@ -105,10 +106,36 @@ public class DataflowInferenceTreeAnnotator extends InferenceTreeAnnotator {
                     .put(tm.toString(), tm);
             AnnotationMirror anno = DataflowUtils.genereateDataflowAnnoFromByteCode(atm,
                     this.realTypeFactory.getProcessingEnv());
+
+            if (atm instanceof AnnotatedArrayType) {
+                // If the return type of a byte code method is Array type,
+                // also generated Dataflow Annotation on Array component type.
+                relaceArrayComponentATM((AnnotatedArrayType) atm);
+            }
+
             replaceATM(atm, anno);
             return null;
         } else {
             return super.visitMethodInvocation(methodInvocationTree, atm);
+        }
+    }
+
+    /**
+     * Replace annotated type mirror by Dataflow Annotation for a given {@link AnnotatedArrayType}.<br>
+     * <br>
+     * For more than one dimension array, this method will recursively replace array's component atm by Dataflow Annoatation.
+     *
+     * @param arrayAtm the given {@link AnnotatedArrayType} whose component's atm will be replaced by this method.
+     */
+    private void relaceArrayComponentATM(AnnotatedArrayType arrayAtm) {
+        AnnotatedTypeMirror componentAtm = arrayAtm.getComponentType();
+        AnnotationMirror componentAnno = DataflowUtils.genereateDataflowAnnoFromByteCode(componentAtm,
+                this.realTypeFactory.getProcessingEnv());
+        replaceATM(componentAtm, componentAnno);
+
+        if (componentAtm instanceof AnnotatedArrayType) {
+            //if component is also an array type, then recursively annotate its component also.
+            relaceArrayComponentATM((AnnotatedArrayType) componentAtm);
         }
     }
 
