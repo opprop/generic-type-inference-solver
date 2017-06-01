@@ -22,6 +22,11 @@ public class DataflowTest extends CFInferenceTest {
     }
 
     @Override
+    public String getPathToInferenceScript() {
+        return "../checker-framework-inference/scripts/inference";
+    }
+
+    @Override
     public Pair<String, List<String>> getSolverNameAndOptions() {
         return Pair.<String, List<String>>of(DataflowConstraintSolver.class.getCanonicalName(), new ArrayList<String>());
     }
@@ -34,7 +39,7 @@ public class DataflowTest extends CFInferenceTest {
     @Parameters
     public static List<File> getTestFiles(){
         List<File> testfiles = new ArrayList<>();//InferenceTestUtilities.findAllSystemTests();
-        testfiles.addAll(TestUtilities.findRelativeNestedJavaFiles("testdata", "dataflow"));
+        testfiles.addAll(TestUtilities.findRelativeNestedJavaFiles("testing", "dataflow"));
         return testfiles;
     }
 }
