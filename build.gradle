@@ -91,7 +91,6 @@ sourceSets {
         compileClasspath += files("bin")
     }
 
-    // TODO: add test src path when have unit tests
     test {
         java {
             srcDirs = ["testing/tests"]
