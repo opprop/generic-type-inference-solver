@@ -22,11 +22,6 @@ public class DataflowTest extends CFInferenceTest {
     }
 
     @Override
-    public String getPathToInferenceScript() {
-        return "../checker-framework-inference/scripts/inference";
-    }
-
-    @Override
     public Pair<String, List<String>> getSolverNameAndOptions() {
         return Pair.<String, List<String>>of(DataflowConstraintSolver.class.getCanonicalName(), new ArrayList<String>());
     }
