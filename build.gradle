@@ -130,7 +130,7 @@ tasks.clean {
 test {
     systemProperty "path.afu.scripts", "../annotation-tools/annotation-file-utilities/scripts"
     systemProperty "inference.script", "../checker-framework-inference/scripts/inference"
-    environment "thrid_party_checker_classpath", "./bin"
+    environment "external_checker_classpath", "./bin"
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
     }
