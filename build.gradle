@@ -130,6 +130,9 @@ tasks.clean {
 test {
     systemProperty "path.afu.scripts", "../annotation-tools/annotation-file-utilities/scripts"
     environment "thrid_party_checker_classpath", "./bin"
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED"
+    }
 }
 
 libsDirName = "../dist"
