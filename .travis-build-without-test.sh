@@ -36,4 +36,4 @@ fi
 (cd $ROOT/checker-framework-inference/ && ./.travis-build-without-test.sh)
 
 # Build GTIS without test
-gradle build -x test
+gradle clean build -x test
