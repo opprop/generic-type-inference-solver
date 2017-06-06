@@ -8,4 +8,4 @@ export SHELLOPTS
 
 . ./.travis-build-without-test.sh
 
-gradle test -i --stacktrace
+gradle test -i
