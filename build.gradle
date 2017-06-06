@@ -28,11 +28,15 @@ def jreVersion  = {
 /************************ jsr308 variables ************************/
 def jsr308Dir   = env["JSR308"] ?: file(new File("..")).absolutePath
 
-def jsr308_langtools = (jsr308Dir + "/jsr308-langtools")
+def jsr308LangtoolsDir = (jsr308Dir + "/jsr308-langtools")
 
 def checkerFrameworkDir = jsr308Dir + "/checker-framework"
 
+def annotationToolsDir = jsr308Dir + "/annotation-tools"
+
 def cfInferenceDir = jsr308Dir + "/checker-framework-inference"
+
+def gtisDir = jsr308Dir + "/generic-type-inference-solver"
 
 /************************ util functions ************************/
 //Closure that creates a file from a base directory and a name of the file in that directory
@@ -113,7 +117,7 @@ tasks.compileJava {
   if(jreVersion == 1.7) {
     options.compilerArgs += ['-source' , '7', '-target', '7']
   }
-  options.forkOptions.executable="$jsr308_langtools/dist/bin/javac"
+  options.forkOptions.executable="$jsr308LangtoolsDir/dist/bin/javac"
 }
 
 tasks.jar {
@@ -128,12 +132,12 @@ tasks.clean {
 }
 
 test {
-    systemProperty "path.afu.scripts", "../annotation-tools/annotation-file-utilities/scripts"
-    systemProperty "path.inference.script", "../checker-framework-inference/scripts/inference"
-    environment "external_checker_classpath", "./bin"
+    systemProperty "path.afu.scripts", "$annotationToolsDir/annotation-file-utilities/scripts"
+    systemProperty "path.inference.script", "$cfInferenceDir/scripts/inference"
+    environment "external_checker_classpath", "$gtisDir/bin"
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
     }
 }
 
-libsDirName = "../dist"
+libsDirName = "$gtisDir/dist"
