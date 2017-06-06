@@ -138,6 +138,7 @@ test {
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
     }
+    jvmArgs "-Xbootclasspath/p:$cfInferenceDir/dist/javac.jar"
 }
 
 libsDirName = "$gtisDir/dist"
