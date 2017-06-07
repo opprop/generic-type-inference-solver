@@ -35,6 +35,5 @@ fi
 # This also builds annotation-tools and jsr308-langtools
 (cd $ROOT/checker-framework-inference/ && ./.travis-build-without-test.sh)
 
-
-cd $ROOT
-bash generic-type-inference-solver/integrationSetup.sh
+# Build GTIS without test
+gradle clean build -x test

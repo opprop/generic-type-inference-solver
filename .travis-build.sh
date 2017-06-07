@@ -8,6 +8,4 @@ export SHELLOPTS
 
 . ./.travis-build-without-test.sh
 
-cd $ROOT/checker-framework-inference
-
-ant -f tests.xml
+gradle test -i
