@@ -138,7 +138,15 @@ test {
     testLogging {
         events "PASSED", "FAILED", "SKIPPED"
     }
-    jvmArgs "-Xbootclasspath/p:$cfInferenceDir/dist/javac.jar"
+    // Need to use Checker Framework version of javac when running under Java 7
+    // https://checkerframework.org/manual/#common-problems
+    if (JavaVersion.current() == JavaVersion.VERSION_1_7) {
+        // When adding CF version javac into bootclasspath under Java 8,
+        // A strange BootstrapMethodError would happened (on Mac OS X).
+        // The only possible related discuss I found is:
+        // https://groups.google.com/forum/#!topic/checker-framework-dev/eNJU6qiqhGQ
+       jvmArgs "-Xbootclasspath/p:$checkerFrameworkDir/checker/dist/javac.jar"
+    }
 }
 
 libsDirName = "$gtisDir/dist"
