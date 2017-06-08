@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import dataflow.qual.DataFlow;
 
-class Dummy {
+class TestByteCodeMethodArrayComponentType {
     public void test(String path) {
         //:: fixable-error: (assignment.type.incompatible)
         @DataFlow(typeNameRoots={"java.lang.String"}) String str = Dummy.getPath(path);
