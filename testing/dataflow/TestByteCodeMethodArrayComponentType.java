@@ -10,17 +10,17 @@ import dataflow.qual.DataFlow;
 class TestByteCodeMethodArrayComponentType {
     public void test(String path) {
         //:: fixable-error: (assignment.type.incompatible)
-        @DataFlow(typeNameRoots={"java.lang.String"}) String str = Dummy.getPath(path);
+        @DataFlow(typeNameRoots={"java.lang.String"}) String str = getPath(path);
     }
 
-    public static String getPath(String pathPart){
+    public String getPath(String pathPart){
         String pathFull = "";
         String [] arrOfPathPart = pathPart.split("");
         pathFull = pathFull + arrOfPathPart[0];
         return pathFull;
     }
 
-    public static void checkFile(String filePath) throws Exception {
+    public void checkFile(String filePath) throws Exception {
         String pathFull = getPath(filePath);  
         FileInputStream fstream = new FileInputStream(filePath);
     }
