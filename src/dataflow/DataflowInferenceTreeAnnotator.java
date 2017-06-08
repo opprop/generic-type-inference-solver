@@ -142,7 +142,6 @@ public class DataflowInferenceTreeAnnotator extends InferenceTreeAnnotator {
 
     private void replaceATM(AnnotatedTypeMirror atm, AnnotationMirror dataflowAM) {
         final ConstantSlot cs = slotManager.createConstantSlot(dataflowAM);
-        slotManager.createConstantSlot(dataflowAM);
         AnnotationBuilder ab = new AnnotationBuilder(realTypeFactory.getProcessingEnv(), VarAnnot.class);
         ab.setValue("value", cs.getId());
         AnnotationMirror varAnno = ab.build();
