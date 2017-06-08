@@ -145,7 +145,7 @@ test {
         // A strange BootstrapMethodError would happened (on Mac OS X).
         // The only possible related discuss I found is:
         // https://groups.google.com/forum/#!topic/checker-framework-dev/eNJU6qiqhGQ
-       jvmArgs "-Xbootclasspath/p:$cfInferenceDir/dist/javac.jar"
+       jvmArgs "-Xbootclasspath/p:$checkerFrameworkDir/checker/dist/javac.jar"
     }
 }
 
