@@ -3,6 +3,7 @@ package dataflow;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.framework.type.AnnotatedTypeMirror;
+import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedArrayType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedDeclaredType;
 import org.checkerframework.framework.type.AnnotatedTypeMirror.AnnotatedPrimitiveType;
 import org.checkerframework.framework.type.QualifierHierarchy;
@@ -26,6 +27,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import com.sun.source.tree.LiteralTree;
@@ -196,9 +198,29 @@ public class DataflowAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                         processingEnv);
                 TypeMirror tm = type.getUnderlyingType();
                 typeNamesMap.put(tm.toString(), tm);
+                if (tm.getKind() == TypeKind.ARRAY) {
+                    replaceArrayComponentATM((AnnotatedArrayType) type);
+                }
                 type.replaceAnnotation(dataFlowType);
             }
             return super.visitMethodInvocation(node, type);
+        }
+
+        /**
+         * Add the bytecode default Dataflow annotation for component type of the given {@link AnnotatedArrayType}.
+         *
+         *<p> For multi-dimensional array, this method will recursively add bytecode default Dataflow annotation to array's component type.
+         *
+         * @param arrayAtm the given {@link AnnotatedArrayType}, whose component type will be added the bytecode default.
+         */
+        private void replaceArrayComponentATM(AnnotatedArrayType arrayAtm) {
+            AnnotatedTypeMirror componentAtm = arrayAtm.getComponentType();
+            AnnotationMirror componentAnno = DataflowUtils.genereateDataflowAnnoFromByteCode(componentAtm,
+                    processingEnv);
+            componentAtm.replaceAnnotation(componentAnno);
+            if (componentAtm.getKind() == TypeKind.ARRAY) {
+                replaceArrayComponentATM((AnnotatedArrayType) componentAtm);
+            }
         }
     }
 
