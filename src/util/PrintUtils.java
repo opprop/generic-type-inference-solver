@@ -57,7 +57,10 @@ public class PrintUtils {
             }
         }
         try {
+<<<<<<< HEAD
             File f = new File(writePath);
+=======
+>>>>>>> 3515826... deleted commented out file
             PrintWriter pw = new PrintWriter(writePath);
             pw.write(sb.toString());
             pw.close();
