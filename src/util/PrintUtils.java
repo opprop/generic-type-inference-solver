@@ -51,14 +51,14 @@ public class PrintUtils {
         System.out.flush();
         System.out.println("/**********************statistic end****************************/");
     }
-    
+
     public static void writeStatistic(Map<StatisticKey, Long> statistic) {
     	JsonObject obj = new JsonObject();
     	Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String writePath = new File(new File("").getAbsolutePath()).toString() + File.separator + "solver-statistic.json";
         for (StatisticKey j : statistic.keySet()) {
-        	if (statistic.get(j) != (long) 0) {
-            	obj.addProperty(j.toString().toLowerCase(), statistic.get(j));    
+            if (statistic.get(j) != (long) 0) {
+                obj.addProperty(j.toString().toLowerCase(), statistic.get(j));
             }
         }
         try {
@@ -69,7 +69,6 @@ public class PrintUtils {
             e.printStackTrace();
         }
     }
-
     
     public static void writeResult(Map<Integer, AnnotationMirror> result) {
         StringBuilder printResult = new StringBuilder();
