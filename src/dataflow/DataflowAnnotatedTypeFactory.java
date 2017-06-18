@@ -100,7 +100,6 @@ public class DataflowAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
         }
 
         private boolean isSubtypeWithRoots(AnnotationMirror rhs, AnnotationMirror lhs) {
-
             Set<String> rTypeNamesSet = new HashSet<String>(Arrays.asList(DataflowUtils.getTypeNames(rhs)));
             Set<String> lTypeNamesSet = new HashSet<String>(Arrays.asList(DataflowUtils.getTypeNames(lhs)));
             Set<String> rRootsSet = new HashSet<String>(Arrays.asList(DataflowUtils.getTypeNameRoots(rhs)));
@@ -137,6 +136,7 @@ public class DataflowAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
 
         @Override
         public boolean isSubtype(AnnotationMirror rhs, AnnotationMirror lhs) {
+            //System.out.println("" + lhs + " " + rhs);
             if (AnnotationUtils.areSameIgnoringValues(rhs, DATAFLOW)
                     && AnnotationUtils.areSameIgnoringValues(lhs, DATAFLOW)) {
                 return isSubtypeWithRoots(rhs, lhs);
@@ -186,6 +186,7 @@ public class DataflowAnnotatedTypeFactory extends BaseAnnotatedTypeFactory {
                         processingEnv);
                 type.replaceAnnotation(dataFlowType);
             }
+            type.replaceAnnotation(DATAFLOW);
             return super.visitLiteral(node, type);
         }
 

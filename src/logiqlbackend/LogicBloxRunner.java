@@ -18,9 +18,11 @@ public class LogicBloxRunner {
 
     private String inReply = "";
     private final String path;
+    private final int nth;
 
-    public LogicBloxRunner(String path) {
+    public LogicBloxRunner(String path, int nth) {
         this.path = path;
+        this.nth = nth;
     }
 
     /**
@@ -32,8 +34,8 @@ public class LogicBloxRunner {
     public void runLogicBlox() {
         String[] command = new String[7];
         command[0] = "lb create pltest";
-        command[1] = "lb addblock pltest -f" + path + "/logiqlEncoding.logic";
-        command[2] = "lb exec pltest -f" + path + "/data.logic";
+        command[1] = "lb addblock pltest -f" + path + "/logiqlEncoding" + nth + ".logic";
+        command[2] = "lb exec pltest -f" + path + "/data" + nth + ".logic";
         command[3] = "lb print pltest orderedAnnotationOf";
         command[4] = "lb delete pltest";
         for (int i = 0; i < 5; i++) {
@@ -105,7 +107,7 @@ public class LogicBloxRunner {
      */
     private void writeFile(String output) {
         try {
-            String writePath = path + "/logicbloxOutput.txt";
+            String writePath = path + "/logicbloxOutput" + nth + ".txt";
             File f = new File(writePath);
             PrintWriter pw = new PrintWriter(f);
             pw.write(output);

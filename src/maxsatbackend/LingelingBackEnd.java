@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
@@ -32,7 +33,9 @@ public class LingelingBackEnd extends MaxSatBackEnd {
     // the integers from 1 to the largest one. Some of them may be not in the
     // clauses.
     private Set<Integer> variableSet = new HashSet<Integer>();
-    public static int nth = 0;
+    public static AtomicInteger nth = new AtomicInteger(0);
+    private long serializationStart;
+    private long serializationEnd;
 
     public LingelingBackEnd(Map<String, String> configuration, Collection<Slot> slots,
             Collection<Constraint> constraints, QualifierHierarchy qualHierarchy,
@@ -112,22 +115,33 @@ public class LingelingBackEnd extends MaxSatBackEnd {
         // and so we unconditionally signal we want CNF output.
         return true;
     }
+    
+    private void recordData() {
+        int totalClauses = hardClauses.size() + softClauses.size();
+        int totalVariable = variableSet.size();
+        StatisticPrinter.record(StatisticKey.CNF_CLAUSES_SIZE, (long) totalClauses);
+        StatisticPrinter.record(StatisticKey.CNF_VARIABLE_SIZE, (long) totalVariable);
+    }
 
     @Override
     public Map<Integer, AnnotationMirror> solve() {
         Map<Integer, AnnotationMirror> result = new HashMap<>();
+        this.serializationStart = System.currentTimeMillis();
         this.convertAll();
         // this.hardClauses.addAll(softClauses);
+        this.serializationEnd = System.currentTimeMillis();
         generateWellForm(hardClauses);
         buildCNF();
         collectVals();
+        recordData();
         // saving memory of JVM...
         this.hardClauses.clear();
-        writeCNFInput("cnfdata" + nth + ".txt");
+        int localNth = nth.incrementAndGet();
+        writeCNFInput("cnfdata" + localNth + ".txt");
         this.solvingStart = System.currentTimeMillis();
         try {
-            int[] resultArray = getOutPut_Error(lingeling + " " + CNFData.getAbsolutePath() + "/cnfdata" + nth + ".txt");
-            nth++;
+            int[] resultArray = getOutPut_Error(lingeling + " " + CNFData.getAbsolutePath() + "/cnfdata"
+                    + localNth + ".txt");
             result = decode(resultArray);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -135,10 +149,22 @@ public class LingelingBackEnd extends MaxSatBackEnd {
         this.solvingEnd = System.currentTimeMillis();
         boolean graph = (configuration.get("useGraph") == null || configuration.get("useGraph").equals(
                 "true")) ? true : false;
+        boolean parallel = (configuration.get("solveInParallel") == null || configuration.get(
+                "solveInParallel").equals("true")) ? true : false;
         long solvingTime = solvingEnd - solvingStart;
         if (graph) {
-            StatisticPrinter.record(StatisticKey.SAT_SOLVING_GRAPH_SEQUENTIAL_TIME_LL, solvingTime);
+            if (parallel) {
+                // StatisticPrinter.recordSingleThread(Pair.<Long, Long> of(
+                // (serializationEnd - serializationStart), solvingTime));
+                StatisticPrinter.recordSerializationSingleThread((serializationEnd - serializationStart));
+                StatisticPrinter.recordSolvingSingleThread(solvingTime);
+            } else {
+                StatisticPrinter.record(StatisticKey.SAT_SOLVING_GRAPH_SEQUENTIAL_TIME_LL, solvingTime);
+                StatisticPrinter.record(StatisticKey.SAT_SERIALIZATION_TIME,
+                        (serializationEnd - serializationStart));
+            }
         } else {
+            StatisticPrinter.record(StatisticKey.SAT_SERIALIZATION_TIME,(serializationEnd - serializationStart));
             StatisticPrinter.record(StatisticKey.SAT_SOLVING_WITHOUT_GRAPH_TIME_LL, solvingTime);
         }
         // saving memory of JVM...

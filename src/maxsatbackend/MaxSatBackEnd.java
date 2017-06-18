@@ -174,8 +174,8 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
         this.serializationStart = System.currentTimeMillis();
         this.convertAll();
         this.serializationEnd = System.currentTimeMillis();
-        StatisticPrinter.record(StatisticKey.SAT_SERIALIZATION_TIME,
-                (serializationEnd - serializationStart));
+        // statisticprinter.record(statistickey.sat_serialization_time,
+        // (serializationend - serializationstart));
         generateWellForm(hardClauses);
         if (shouldOutputCNF()) {
             buildCNF();
@@ -206,11 +206,18 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             long solvingTime = solvingEnd - solvingStart;
             if (graph) {
                 if (parallel) {
-                    StatisticPrinter.record(StatisticKey.SAT_SOLVING_GRAPH_PARALLEL_TIME, solvingTime);
+                    // StatisticPrinter.recordSingleThread(Pair.<Long, Long>
+                    // of((serializationEnd - serializationStart),
+                    // solvingTime));
+                    StatisticPrinter.recordSerializationSingleThread((serializationEnd - serializationStart));
+                    StatisticPrinter.recordSolvingSingleThread(solvingTime);
                 } else {
                     StatisticPrinter.record(StatisticKey.SAT_SOLVING_GRAPH_SEQUENTIAL_TIME, solvingTime);
+                    StatisticPrinter.record(StatisticKey.SAT_SERIALIZATION_TIME,
+                            (serializationEnd - serializationStart));
                 }
             } else {
+                StatisticPrinter.record(StatisticKey.SAT_SERIALIZATION_TIME, (serializationEnd - serializationStart));
                 StatisticPrinter.record(StatisticKey.SAT_SOLVING_WITHOUT_GRAPH_TIME, solvingTime);
             }
 
