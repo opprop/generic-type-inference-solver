@@ -134,7 +134,8 @@ public class GraphBuilder {
                 }
                 constantPathConstraints.add(edge.getConstraint());
 
-                Vertex next =  current.equals(edge.to) ? edge.getFromVertex() : edge.getToVertex();
+                Vertex next =  current.equals(edge.to) ? 
+                        edge.getFromVertex() : edge.getToVertex();
 
                 Set<Vertex> cacheSet;
                 if (this.vertexCache.keySet().contains(vertex)) {
