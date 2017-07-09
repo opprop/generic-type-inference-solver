@@ -70,7 +70,6 @@ repositories {
 }
 
 dependencies {
-
     compile 'com.google.code.gson:gson:1.7.2'
     // solver backend dependencies
     // TODO: should be removed when we get rid of classic solver
