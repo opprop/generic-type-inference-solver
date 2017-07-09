@@ -13,6 +13,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import checkers.inference.InferenceMain;
 
+
 public class PrintUtils {
 
     /**
@@ -57,7 +58,7 @@ public class PrintUtils {
         String writePath = new File(new File("").getAbsolutePath()).toString() + File.separator + "solver-statistic.json";
         for (StatisticKey j : statistic.keySet()) {
             if (statistic.get(j) != (long) 0) {
-                obj.addProperty(j.toString().toLowerCase(),statistic.get(j));
+                obj.addProperty(j.toString().toLowerCase(), statistic.get(j));
             }
         }
         try {
