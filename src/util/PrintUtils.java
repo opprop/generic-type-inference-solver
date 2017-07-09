@@ -53,8 +53,8 @@ public class PrintUtils {
     }
     
     public static void writeStatistic(Map<StatisticKey, Long> statistic) {
-    	JsonObject obj = new JsonObject();
-    	Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonObject obj = new JsonObject();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String writePath = new File(new File("").getAbsolutePath()).toString() + File.separator + "solver-statistic.json";
         for (StatisticKey j : statistic.keySet()) {
         	if (statistic.get(j) != (long) 0) {
@@ -70,7 +70,7 @@ public class PrintUtils {
         }
     }
 
-    
+
     public static void writeResult(Map<Integer, AnnotationMirror> result) {
         StringBuilder printResult = new StringBuilder();
         final int maxLength = String.valueOf(InferenceMain.getInstance().getSlotManager().getNumberOfSlots())
