@@ -13,7 +13,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import checkers.inference.InferenceMain;
 
-
 public class PrintUtils {
 
     /**
