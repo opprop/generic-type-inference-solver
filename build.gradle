@@ -70,6 +70,9 @@ repositories {
 }
 
 dependencies {
+
+    // Serialize constraints
+    compile 'com.google.code.gson:gson:1.7.2' 
     // solver backend dependencies
     // TODO: should be removed when we get rid of classic solver
     // TODO: currently the runtime dependencies of sat4j is bit tricky --- it actually uses the sat4j from cfi/dist
