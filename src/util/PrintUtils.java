@@ -6,13 +6,12 @@ import java.io.PrintWriter;
 import java.util.Map;
 
 import javax.lang.model.element.AnnotationMirror;
-
+import util.StatisticPrinter.StatisticKey;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-
 import checkers.inference.InferenceMain;
-import util.StatisticPrinter.StatisticKey;
+
 
 public class PrintUtils {
 
