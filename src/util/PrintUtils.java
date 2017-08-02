@@ -7,6 +7,7 @@ import checkers.inference.model.serialization.ToStringSerializer;
 import constraintsolver.Lattice;
 import org.sat4j.core.VecInt;
 import org.sat4j.maxsat.SolverFactory;
+import org.sat4j.pb.IPBSolver;
 import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
@@ -126,7 +127,7 @@ public class PrintUtils {
 
     public static void printContradictingHardConstraints(final List<VecInt> hardClauses, final List<Constraint> hardConstraints,
                                                          final SlotManager slotManager, final Lattice lattice) {
-        Xplain<ISolver> explanationSolver = new Xplain<>(SolverFactory.newDefault());
+        Xplain<IPBSolver> explanationSolver = new Xplain<>(SolverFactory.newDefault());
         configureExplanationSolver(hardClauses, slotManager, lattice, explanationSolver);
 
         try {
@@ -146,7 +147,7 @@ public class PrintUtils {
         }
     }
 
-    protected static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<ISolver> xplainer) {
+    protected static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<IPBSolver> xplainer) {
         int numberOfNewVars = slotManager.getNumberOfSlots() * lattice.numTypes;
         int numberOfClauses = hardClauses.size();
         xplainer.setMinimizationStrategy(new DeletionStrategy());
@@ -154,7 +155,7 @@ public class PrintUtils {
         xplainer.setExpectedNumberOfClauses(numberOfClauses);
     }
 
-    protected static void printAnalysisResult(final List<Constraint> hardConstraints, final Xplain<ISolver> xplainer) throws TimeoutException {
+    protected static void printAnalysisResult(final List<Constraint> hardConstraints, final Xplain<IPBSolver> xplainer) throws TimeoutException {
         System.out.println("========== Inference failed because of the following inconsistent constraints ==========");
         int[] indicies = xplainer.minimalExplanation();
         Set<Constraint> contradictingConstrains = new HashSet<>();
