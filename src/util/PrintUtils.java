@@ -1,16 +1,44 @@
 package util;
 
+import checkers.inference.InferenceMain;
+import checkers.inference.SlotManager;
+import checkers.inference.model.Constraint;
+import checkers.inference.model.serialization.ToStringSerializer;
+import constraintsolver.Lattice;
+import org.sat4j.core.VecInt;
+import org.sat4j.maxsat.SolverFactory;
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.ISolver;
+import org.sat4j.specs.TimeoutException;
+import org.sat4j.tools.xplain.DeletionStrategy;
+import org.sat4j.tools.xplain.Xplain;
+import util.StatisticPrinter.StatisticKey;
+
+import javax.lang.model.element.AnnotationMirror;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-
-import javax.lang.model.element.AnnotationMirror;
-
-import util.StatisticPrinter.StatisticKey;
-import checkers.inference.InferenceMain;
+import java.util.Set;
 
 public class PrintUtils {
+
+    /**
+     * print all soft and hard clauses for testing.
+     */
+    public static void printClauses(final List<VecInt> hardClauses, final List<VecInt> softClauses) {
+        System.out.println("Hard clauses: ");
+        for (VecInt hardClause : hardClauses) {
+            System.out.println(hardClause);
+        }
+        System.out.println();
+        System.out.println("Soft clauses: ");
+        for (VecInt softClause : softClauses) {
+            System.out.println(softClause);
+        }
+    }
 
     /**
      * print result from sat solver for testing.
@@ -94,6 +122,53 @@ public class PrintUtils {
             e.printStackTrace();
         }
         printResult = null;
+    }
+
+    public static void printContradictingHardConstraints(final List<VecInt> hardClauses, final List<Constraint> hardConstraints,
+                                                         final SlotManager slotManager, final Lattice lattice) {
+        Xplain<ISolver> explanationSolver = new Xplain<>(SolverFactory.newDefault());
+        configureExplanationSolver(hardClauses, slotManager, lattice, explanationSolver);
+
+        try {
+            for (VecInt clause : hardClauses) {
+                explanationSolver.addClause(clause);
+            }
+        } catch (ContradictionException e) {
+            throw new RuntimeException("Failed to print contradicting constraints", e);
+        }
+
+        try {
+            if (explanationSolver.isSatisfiable())
+                throw new RuntimeException("Failed to find contradicting constraints");
+            printAnalysisResult(hardConstraints, explanationSolver);
+        } catch (TimeoutException e) {
+            throw new RuntimeException("Failed to print contradicting constraints", e);
+        }
+
+        System.exit(2);
+    }
+
+    protected static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<ISolver> xplainer) {
+        int numberOfNewVars = slotManager.getNumberOfSlots() * lattice.numTypes;
+        int numberOfClauses = hardClauses.size();
+        xplainer.setMinimizationStrategy(new DeletionStrategy());
+        xplainer.newVar(numberOfNewVars);
+        xplainer.setExpectedNumberOfClauses(numberOfClauses);
+    }
+
+    protected static void printAnalysisResult(final List<Constraint> hardConstraints, final Xplain<ISolver> xplainer) throws TimeoutException {
+        System.out.println("========== Inference failed because of the following inconsistent constraints ==========");
+        int[] indicies = xplainer.minimalExplanation();
+        Set<Constraint> contradictingConstrains = new HashSet<>();
+        ToStringSerializer toStringSerializer = new ToStringSerializer(true);
+        for (int clauseIndex : indicies) {
+            if (clauseIndex > hardConstraints.size()) continue;
+            // Solver gives 1-based index. Decrement by 1 here
+            Constraint constraint = hardConstraints.get(clauseIndex - 1);
+            if (contradictingConstrains.add(constraint))
+                System.out.println("\t" + constraint.serialize(toStringSerializer) + " @ " + constraint.getLocation().toString());
+        }
+        System.out.println("=================================== Explanation Ends Here ==============================");
     }
 
 }
