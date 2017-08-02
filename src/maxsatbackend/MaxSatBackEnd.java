@@ -43,9 +43,6 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
     protected final File CNFData = new File(new File("").getAbsolutePath() + "/cnfData");
     protected StringBuilder CNFInput = new StringBuilder();
 
-    // Whether we should compute the minimum unsatisfiable constraints
-    // and output a more useful error in the case of an unsolvable set of constraints.
-    private boolean explainUnsolvable;
 
     private long serializationStart;
     private long serializationEnd;
@@ -64,7 +61,6 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             CNFData.mkdir();
         }
 
-        explainUnsolvable = "true".equals(configuration.get("explain"));
     }
 
     protected boolean shouldOutputCNF() {
@@ -203,8 +199,7 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             this.solvingEnd = System.currentTimeMillis();
 
             boolean graph = configuration.get("useGraph") == null || configuration.get("useGraph").equals("true");
-            boolean parallel = configuration.get("solveInParallel") == null ||
-                    configuration.get("solveInParallel").equals("true");
+            boolean parallel = configuration.get("solveInParallel") == null || configuration.get("solveInParallel").equals("true");
             long solvingTime = solvingEnd - solvingStart;
             if (graph) {
                 if (parallel) {
@@ -221,9 +216,11 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
                 // PrintUtils.printResult(result);
             } else {
                 PrintUtils.printContradictingHardConstraints(hardClauses, hardConstraints, slotManager, lattice);
+                System.exit(2);
             }
         } catch (ContradictionException e) {
             PrintUtils.printContradictingHardConstraints(hardClauses, hardConstraints, slotManager, lattice);
+            System.exit(2);
         } catch (TimeoutException e) {
             throw new RuntimeException("Failed to solve constrains due to timeout", e);
         } catch (Exception e) {

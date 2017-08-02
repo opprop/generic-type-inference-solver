@@ -144,8 +144,6 @@ public class PrintUtils {
         } catch (TimeoutException e) {
             throw new RuntimeException("Failed to print contradicting constraints", e);
         }
-
-        System.exit(2);
     }
 
     protected static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<ISolver> xplainer) {
