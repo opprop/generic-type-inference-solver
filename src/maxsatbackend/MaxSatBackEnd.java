@@ -215,12 +215,13 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             }
 
             if (isSatisfiable) {
-            // saving memory of JVM...
-            this.softClauses.clear();
+                // saving memory of JVM...
+                this.softClauses.clear();
                 result = decode(solver.model());
                 // PrintUtils.printResult(result);
             } else {
                 System.out.println("Not solvable!");
+                System.exit(1);
             }
 
         } catch (Throwable e) {
