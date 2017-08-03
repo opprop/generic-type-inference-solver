@@ -8,6 +8,9 @@ import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 
 import util.StatisticPrinter.StatisticKey;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import checkers.inference.InferenceMain;
 
 public class PrintUtils {
@@ -49,17 +52,17 @@ public class PrintUtils {
     }
 
     public static void writeStatistic(Map<StatisticKey, Long> statistic) {
-        String writePath = new File(new File("").getAbsolutePath()).toString() + File.separator + "solver-statistic.txt";
-        StringBuilder sb = new StringBuilder();
+        JsonObject obj = new JsonObject();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String writePath = new File(new File("").getAbsolutePath()).toString() + File.separator + "solver-statistic.json";
         for (StatisticKey j : statistic.keySet()) {
             if (statistic.get(j) != (long) 0) {
-                sb.append((j.toString().toLowerCase() + "," + statistic.get(j)) + "\n");
+                obj.addProperty(j.toString().toLowerCase(), statistic.get(j));
             }
         }
         try {
-            File f = new File(writePath);
             PrintWriter pw = new PrintWriter(writePath);
-            pw.write(sb.toString());
+            pw.write(gson.toJson(obj));
             pw.close();
         } catch (Exception e) {
             e.printStackTrace();
