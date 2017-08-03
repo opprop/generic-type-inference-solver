@@ -3,6 +3,7 @@ Status of Master
 
 [![build-status](https://travis-ci.org/opprop/generic-type-inference-solver.svg?branch=master)](https://travis-ci.org/opprop/generic-type-inference-solver)
 
+**The Master of this repository is outdated, please refer to https://github.com/opprop/checker-framework-inference/pull/53 for the latest vertion of this project.**
 
 Dataflow type system README
 ===========================
