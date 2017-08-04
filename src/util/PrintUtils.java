@@ -160,7 +160,7 @@ public class PrintUtils {
         ToStringSerializer toStringSerializer = new ToStringSerializer(false);
         OneLevelSlotsPrinter oneLevelSlotsPrinter = new OneLevelSlotsPrinter(toStringSerializer);
 
-        System.out.println("========== Inference failed because of the following inconsistent constraints ==========");
+        System.out.println("\n========== Inference failed because of the following inconsistent constraints ==========\n");
         for (int clauseIndex : indicies) {
             if (clauseIndex > hardConstraints.size()) continue;
             // Solver gives 1-based index. Decrement by 1 here
@@ -168,7 +168,7 @@ public class PrintUtils {
             if (contradictingConstrains.add(constraint))
                 System.out.println("\t" + constraint.serialize(toStringSerializer) + " \n\t    " + constraint.getLocation().toString() + "\n");
         }
-        System.out.println("==================================== Related Slots =====================================");
+        System.out.println("==================================== Related Slots =====================================\n");
         for (Constraint c : contradictingConstrains) {
             c.serialize(oneLevelSlotsPrinter);
         }
