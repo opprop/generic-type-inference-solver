@@ -222,11 +222,11 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
                 result = decode(solver.model());
                 // PrintUtils.printResult(result);
             } else {
-                PrintUtils.printContradictingHardConstraints(hardClauses, hardConstraints, slotManager, lattice);
+                PrintUtils.printContradictingHardConstraintsAndSlots(hardClauses, hardConstraints, slotManager, lattice);
                 System.exit(2);
             }
         } catch (ContradictionException e) {
-            PrintUtils.printContradictingHardConstraints(hardClauses, hardConstraints, slotManager, lattice);
+            PrintUtils.printContradictingHardConstraintsAndSlots(hardClauses, hardConstraints, slotManager, lattice);
             System.exit(2);
         } catch (TimeoutException e) {
             throw new RuntimeException("Failed to solve constrains due to timeout", e);

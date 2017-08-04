@@ -9,7 +9,6 @@ import org.sat4j.core.VecInt;
 import org.sat4j.maxsat.SolverFactory;
 import org.sat4j.pb.IPBSolver;
 import org.sat4j.specs.ContradictionException;
-import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
 import org.sat4j.tools.xplain.DeletionStrategy;
 import org.sat4j.tools.xplain.Xplain;
@@ -125,8 +124,8 @@ public class PrintUtils {
         printResult = null;
     }
 
-    public static void printContradictingHardConstraints(final List<VecInt> hardClauses, final List<Constraint> hardConstraints,
-                                                         final SlotManager slotManager, final Lattice lattice) {
+    public static void printContradictingHardConstraintsAndSlots(final List<VecInt> hardClauses, final List<Constraint> hardConstraints,
+                                                                 final SlotManager slotManager, final Lattice lattice) {
         Xplain<IPBSolver> explanationSolver = new Xplain<>(SolverFactory.newDefault());
         configureExplanationSolver(hardClauses, slotManager, lattice, explanationSolver);
 
@@ -147,7 +146,7 @@ public class PrintUtils {
         }
     }
 
-    protected static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<IPBSolver> xplainer) {
+    private static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<IPBSolver> xplainer) {
         int numberOfNewVars = slotManager.getNumberOfSlots() * lattice.numTypes;
         int numberOfClauses = hardClauses.size();
         xplainer.setMinimizationStrategy(new DeletionStrategy());
@@ -155,17 +154,23 @@ public class PrintUtils {
         xplainer.setExpectedNumberOfClauses(numberOfClauses);
     }
 
-    protected static void printAnalysisResult(final List<Constraint> hardConstraints, final Xplain<IPBSolver> xplainer) throws TimeoutException {
-        System.out.println("========== Inference failed because of the following inconsistent constraints ==========");
+    private static void printAnalysisResult(final List<Constraint> hardConstraints, final Xplain<IPBSolver> xplainer) throws TimeoutException {
         int[] indicies = xplainer.minimalExplanation();
         Set<Constraint> contradictingConstrains = new HashSet<>();
-        ToStringSerializer toStringSerializer = new ToStringSerializer(true);
+        ToStringSerializer toStringSerializer = new ToStringSerializer(false);
+        OneLevelSlotsPrinter oneLevelSlotsPrinter = new OneLevelSlotsPrinter(toStringSerializer);
+
+        System.out.println("========== Inference failed because of the following inconsistent constraints ==========");
         for (int clauseIndex : indicies) {
             if (clauseIndex > hardConstraints.size()) continue;
             // Solver gives 1-based index. Decrement by 1 here
             Constraint constraint = hardConstraints.get(clauseIndex - 1);
             if (contradictingConstrains.add(constraint))
-                System.out.println("\t" + constraint.serialize(toStringSerializer) + " @ " + constraint.getLocation().toString());
+                System.out.println("\t" + constraint.serialize(toStringSerializer) + " \n\t    " + constraint.getLocation().toString() + "\n");
+        }
+        System.out.println("==================================== Related Slots =====================================");
+        for (Constraint c : contradictingConstrains) {
+            c.serialize(oneLevelSlotsPrinter);
         }
         System.out.println("=================================== Explanation Ends Here ==============================");
     }
