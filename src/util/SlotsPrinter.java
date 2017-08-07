@@ -22,104 +22,116 @@ import java.util.Set;
 
 /**
  * Created by mier on 04/08/17.
- * Non-transitively prints all slots in a constraint. Each slot is only printed once.
+ * Transitively prints all non-constant slots in a constraint. Each slot is only
+ * printed once.
  */
-public final class OneLevelSlotsPrinter implements Serializer<String, Void> {
+public final class SlotsPrinter implements Serializer<Void, Void> {
 
     /**Delegatee that serializes slots to string representation.*/
     private final ToStringSerializer toStringSerializer;
+    /**Stores already-printed slots so they won't be printed again.*/
     private final Set<Slot> printedSlots;
 
 
-    public OneLevelSlotsPrinter(final ToStringSerializer toStringSerializer) {
+    public SlotsPrinter(final ToStringSerializer toStringSerializer) {
         this.toStringSerializer = toStringSerializer;
         printedSlots = new HashSet<>();
     }
 
     private void printSlotIfNotPrinted(Slot slot) {
-        if (!printedSlots.contains(slot) && !(slot instanceof ConstantSlot)) {
-            System.out.println("\t" + slot.serialize(this) + " \n\t    " + slot.getLocation().toString() + "\n");
-            printedSlots.add(slot);
+        if (printedSlots.add(slot) && !(slot instanceof ConstantSlot)) {
+            System.out.println("\t" + slot.serialize(toStringSerializer) + " \n\t    " + slot.getLocation().toString() + "\n");
         }
     }
 
     @Override
     public Void serialize(SubtypeConstraint constraint) {
-        printSlotIfNotPrinted(constraint.getSubtype());
-        printSlotIfNotPrinted(constraint.getSupertype());
+        constraint.getSubtype().serialize(this);
+        constraint.getSupertype().serialize(this);
         return null;// Make compiler happy
     }
 
     @Override
     public Void serialize(EqualityConstraint constraint) {
-        printSlotIfNotPrinted(constraint.getFirst());
-        printSlotIfNotPrinted(constraint.getSecond());
+        constraint.getFirst().serialize(this);
+        constraint.getSecond().serialize(this);
         return null;
     }
 
     @Override
     public Void serialize(ExistentialConstraint constraint) {
-        printSlotIfNotPrinted(constraint.getPotentialVariable());
+        constraint.getPotentialVariable().serialize(this);
         return null;
     }
 
     @Override
     public Void serialize(InequalityConstraint constraint) {
-        printSlotIfNotPrinted(constraint.getFirst());
-        printSlotIfNotPrinted(constraint.getSecond());
+        constraint.getFirst().serialize(this);
+        constraint.getSecond().serialize(this);
         return null;
     }
 
     @Override
     public Void serialize(ComparableConstraint comparableConstraint) {
-        printSlotIfNotPrinted(comparableConstraint.getFirst());
-        printSlotIfNotPrinted(comparableConstraint.getSecond());
+        comparableConstraint.getFirst().serialize(this);
+        comparableConstraint.getSecond().serialize(this);
         return null;
     }
 
     @Override
     public Void serialize(CombineConstraint combineConstraint) {
-        printSlotIfNotPrinted(combineConstraint.getResult());
-        printSlotIfNotPrinted(combineConstraint.getTarget());
-        printSlotIfNotPrinted(combineConstraint.getDeclared());
+        combineConstraint.getResult().serialize(this);
+        combineConstraint.getTarget().serialize(this);
+        combineConstraint.getDeclared().serialize(this);
         return null;
     }
 
     @Override
     public Void serialize(PreferenceConstraint preferenceConstraint) {
-        printSlotIfNotPrinted(preferenceConstraint.getVariable());
+        preferenceConstraint.getVariable().serialize(this);
         return null;
     }
 
-    /*Use Decorator pattern to delegate slots serialization to ToStringSerializer*/
     @Override
-    public String serialize(VariableSlot slot) {
-        return toStringSerializer.serialize(slot);
+    public Void serialize(VariableSlot slot) {
+        printSlotIfNotPrinted(slot);
+        return null;//Make compiler happy
     }
 
     @Override
-    public String serialize(ConstantSlot slot) {
-        return toStringSerializer.serialize(slot);
+    public Void serialize(ConstantSlot slot) {
+        return null;
     }
 
     @Override
-    public String serialize(ExistentialVariableSlot slot) {
-        return toStringSerializer.serialize(slot);
+    public Void serialize(ExistentialVariableSlot slot) {
+        slot.getPotentialSlot().serialize(this);
+        slot.getAlternativeSlot().serialize(this);
+        printSlotIfNotPrinted(slot);
+        return null;
     }
 
     @Override
-    public String serialize(RefinementVariableSlot slot) {
-        return toStringSerializer.serialize(slot);
+    public Void serialize(RefinementVariableSlot slot) {
+        slot.getRefined().serialize(this);
+        printSlotIfNotPrinted(slot);
+        return null;
     }
 
     @Override
-    public String serialize(CombVariableSlot slot) {
-        return toStringSerializer.serialize(slot);
+    public Void serialize(CombVariableSlot slot) {
+        slot.getFirst().serialize(this);
+        slot.getSecond().serialize(this);
+        printSlotIfNotPrinted(slot);
+        return null;
     }
 
     @Override
-    public String serialize(LubVariableSlot slot) {
-        return toStringSerializer.serialize(slot);
+    public Void serialize(LubVariableSlot slot) {
+        slot.getLeft().serialize(this);
+        slot.getRight().serialize(this);
+        printSlotIfNotPrinted(slot);
+        return null;
     }
 
 }

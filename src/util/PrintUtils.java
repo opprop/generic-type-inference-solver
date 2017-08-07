@@ -124,8 +124,8 @@ public class PrintUtils {
         printResult = null;
     }
 
-    public static void printContradictingHardConstraintsAndSlots(final List<VecInt> hardClauses, final List<Constraint> hardConstraints,
-                                                                 final SlotManager slotManager, final Lattice lattice) {
+    public static void printInferenceFailureExplanation(final List<VecInt> hardClauses, final List<Constraint> hardConstraints,
+                                                        final SlotManager slotManager, final Lattice lattice) {
         Xplain<IPBSolver> explanationSolver = new Xplain<>(SolverFactory.newDefault());
         configureExplanationSolver(hardClauses, slotManager, lattice, explanationSolver);
 
@@ -140,27 +140,33 @@ public class PrintUtils {
         try {
             if (explanationSolver.isSatisfiable())
                 throw new RuntimeException("Failed to find contradicting constraints");
-            printAnalysisResult(hardConstraints, explanationSolver);
+            printExplanationResult(hardConstraints, explanationSolver);
         } catch (TimeoutException e) {
             throw new RuntimeException("Failed to print contradicting constraints", e);
         }
     }
 
-    private static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<IPBSolver> xplainer) {
+    private static void configureExplanationSolver(final List<VecInt> hardClauses, final SlotManager slotManager, final Lattice lattice, final Xplain<IPBSolver> explainer) {
         int numberOfNewVars = slotManager.getNumberOfSlots() * lattice.numTypes;
         int numberOfClauses = hardClauses.size();
-        xplainer.setMinimizationStrategy(new DeletionStrategy());
-        xplainer.newVar(numberOfNewVars);
-        xplainer.setExpectedNumberOfClauses(numberOfClauses);
+        explainer.setMinimizationStrategy(new DeletionStrategy());
+        explainer.newVar(numberOfNewVars);
+        explainer.setExpectedNumberOfClauses(numberOfClauses);
     }
 
-    private static void printAnalysisResult(final List<Constraint> hardConstraints, final Xplain<IPBSolver> xplainer) throws TimeoutException {
-        int[] indicies = xplainer.minimalExplanation();
-        Set<Constraint> contradictingConstrains = new HashSet<>();
+    private static void printExplanationResult(final List<Constraint> hardConstraints, final Xplain<IPBSolver> explainer) throws TimeoutException {
         ToStringSerializer toStringSerializer = new ToStringSerializer(false);
-        OneLevelSlotsPrinter oneLevelSlotsPrinter = new OneLevelSlotsPrinter(toStringSerializer);
+        Set<Constraint> contradictingConstrains = new HashSet<>();
 
         System.out.println("\n========== Inference failed because of the following inconsistent constraints ==========\n");
+        printInconsistentConstraints(hardConstraints, explainer, toStringSerializer, contradictingConstrains);
+        System.out.println("==================================== Related Slots =====================================\n");
+        printSlotsInInconsistentConstraints(toStringSerializer, contradictingConstrains);
+        System.out.println("=================================== Explanation Ends Here ==============================");
+    }
+
+    private static void printInconsistentConstraints(final List<Constraint> hardConstraints, final Xplain<IPBSolver> explainer, final ToStringSerializer toStringSerializer, final Set<Constraint> contradictingConstrains) throws TimeoutException {
+        int[] indicies = explainer.minimalExplanation();
         for (int clauseIndex : indicies) {
             if (clauseIndex > hardConstraints.size()) continue;
             // Solver gives 1-based index. Decrement by 1 here
@@ -168,11 +174,13 @@ public class PrintUtils {
             if (contradictingConstrains.add(constraint))
                 System.out.println("\t" + constraint.serialize(toStringSerializer) + " \n\t    " + constraint.getLocation().toString() + "\n");
         }
-        System.out.println("==================================== Related Slots =====================================\n");
+    }
+
+    private static void printSlotsInInconsistentConstraints(final ToStringSerializer toStringSerializer, final Set<Constraint> contradictingConstrains) {
+        SlotsPrinter slotsPrinter = new SlotsPrinter(toStringSerializer);
         for (Constraint c : contradictingConstrains) {
-            c.serialize(oneLevelSlotsPrinter);
+            c.serialize(slotsPrinter);
         }
-        System.out.println("=================================== Explanation Ends Here ==============================");
     }
 
 }
