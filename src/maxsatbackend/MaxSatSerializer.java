@@ -9,6 +9,7 @@ import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 
+import checkers.inference.model.LubVariableSlot;
 import org.sat4j.core.VecInt;
 
 import util.ConstantUtils;
@@ -358,6 +359,11 @@ public class MaxSatSerializer implements Serializer<VecInt[], VecInt[]> {
 
     @Override
     public VecInt[] serialize(CombVariableSlot slot) {
+        return null;
+    }
+
+    @Override
+    public VecInt[] serialize(LubVariableSlot slot) {
         return null;
     }
 

@@ -1,5 +1,6 @@
 package logiqlbackend;
 
+import checkers.inference.model.LubVariableSlot;
 import util.NameUtils;
 import checkers.inference.model.CombVariableSlot;
 import checkers.inference.model.CombineConstraint;
@@ -194,6 +195,11 @@ public class LogiQLSerializer implements Serializer<String, String> {
     @Override
     public String serialize(CombVariableSlot slot) {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public String serialize(LubVariableSlot slot) {
         return null;
     }
 

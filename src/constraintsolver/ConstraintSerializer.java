@@ -10,6 +10,7 @@ import checkers.inference.model.EqualityConstraint;
 import checkers.inference.model.ExistentialConstraint;
 import checkers.inference.model.ExistentialVariableSlot;
 import checkers.inference.model.InequalityConstraint;
+import checkers.inference.model.LubVariableSlot;
 import checkers.inference.model.PreferenceConstraint;
 import checkers.inference.model.RefinementVariableSlot;
 import checkers.inference.model.Serializer;
@@ -87,6 +88,11 @@ public class ConstraintSerializer<S, T> implements Serializer<S, T> {
 
     @Override
     public S serialize(CombVariableSlot slot) {
+        return realSerializer.serialize(slot);
+    }
+
+    @Override
+    public S serialize(LubVariableSlot slot) {
         return realSerializer.serialize(slot);
     }
 

@@ -1,5 +1,6 @@
 package generalconstraintsolver;
 
+import checkers.inference.model.LubVariableSlot;
 import org.checkerframework.javacutil.AnnotationUtils;
 
 import java.util.ArrayList;
@@ -297,6 +298,11 @@ public class GeneralEncodingSerializer implements Serializer<ImpliesLogic[], Imp
     @Override
     public ImpliesLogic[] serialize(CombVariableSlot slot) {
         // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public ImpliesLogic[] serialize(LubVariableSlot slot) {
         return null;
     }
 

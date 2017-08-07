@@ -1,5 +1,13 @@
 package maxsatbackend;
 
+import checkers.inference.InferenceMain;
+import checkers.inference.SlotManager;
+import checkers.inference.model.Constraint;
+import checkers.inference.model.PreferenceConstraint;
+import checkers.inference.model.Serializer;
+import checkers.inference.model.Slot;
+import constraintsolver.BackEnd;
+import constraintsolver.Lattice;
 import org.checkerframework.framework.type.QualifierHierarchy;
 
 import java.io.File;
@@ -19,19 +27,15 @@ import javax.lang.model.element.AnnotationMirror;
 
 import org.sat4j.core.VecInt;
 import org.sat4j.maxsat.WeightedMaxSatDecorator;
+import org.sat4j.specs.ISolver;
 
+import org.sat4j.specs.ContradictionException;
+import org.sat4j.specs.TimeoutException;
 import util.MathUtils;
+import util.PrintUtils;
 import util.StatisticPrinter;
 import util.StatisticPrinter.StatisticKey;
 import util.VectorUtils;
-import checkers.inference.InferenceMain;
-import checkers.inference.SlotManager;
-import checkers.inference.model.Constraint;
-import checkers.inference.model.PreferenceConstraint;
-import checkers.inference.model.Serializer;
-import checkers.inference.model.Slot;
-import constraintsolver.BackEnd;
-import constraintsolver.Lattice;
 
 /**
  * @author jianchu MaxSat back end converts constraints to VecInt, and solves
@@ -40,10 +44,12 @@ import constraintsolver.Lattice;
 public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
 
     protected final SlotManager slotManager;
-    protected final List<VecInt> hardClauses = new LinkedList<VecInt>();
-    protected final List<VecInt> softClauses = new LinkedList<VecInt>();
+    protected final List<VecInt> hardClauses = new LinkedList<>();
+    protected final List<Constraint> hardConstraints = new LinkedList<>();
+    protected final List<VecInt> softClauses = new LinkedList<>();
     protected final File CNFData = new File(new File("").getAbsolutePath() + "/cnfData");
     protected StringBuilder CNFInput = new StringBuilder();
+
 
     private long serializationStart;
     private long serializationEnd;
@@ -61,6 +67,7 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
         if (shouldOutputCNF()) {
             CNFData.mkdir();
         }
+
     }
 
     protected boolean shouldOutputCNF() {
@@ -123,6 +130,7 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
                         softClauses.add(res);
                     } else {
                         hardClauses.add(res);
+                        hardConstraints.add(constraint);
                     }
                 }
             }
@@ -188,8 +196,6 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             for (VecInt hardClause : hardClauses) {
                 solver.addHardClause(hardClause);
             }
-            // saving memory of JVM...
-            this.hardClauses.clear();
 
             for (VecInt softclause : softClauses) {
                 solver.addSoftClause(softclause);
@@ -199,10 +205,8 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             boolean isSatisfiable = solver.isSatisfiable();
             this.solvingEnd = System.currentTimeMillis();
 
-            boolean graph = (configuration.get("useGraph") == null || configuration.get("useGraph")
-                    .equals("true")) ? true : false;
-            boolean parallel = (configuration.get("solveInParallel") == null || configuration.get(
-                    "solveInParallel").equals("true")) ? true : false;
+            boolean graph = configuration.get("useGraph") == null || configuration.get("useGraph").equals("true");
+            boolean parallel = configuration.get("solveInParallel") == null || configuration.get("solveInParallel").equals("true");
             long solvingTime = solvingEnd - solvingStart;
             if (graph) {
                 if (parallel) {
@@ -215,28 +219,36 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
             }
 
             if (isSatisfiable) {
-            // saving memory of JVM...
-            this.softClauses.clear();
                 result = decode(solver.model());
                 // PrintUtils.printResult(result);
             } else {
-                System.out.println("Not solvable!");
+                PrintUtils.printInferenceFailureExplanation(hardClauses, hardConstraints, slotManager, lattice);
+                System.exit(2);
             }
-
-        } catch (Throwable e) {
-            e.printStackTrace();
+        } catch (ContradictionException e) {
+            PrintUtils.printInferenceFailureExplanation(hardClauses, hardConstraints, slotManager, lattice);
+            System.exit(2);
+        } catch (TimeoutException e) {
+            throw new RuntimeException("Failed to solve constrains due to timeout", e);
+        } catch (Exception e) {
+            throw new RuntimeException("Unknown exception occurred when solving constraints", e);
+        } finally {
+            // saving memory of JVM...
+            this.hardClauses.clear();
+            this.softClauses.clear();
+            this.constraints = null;
         }
-        // saving memory of JVM...
-        this.constraints = null;
+
         return result;
     }
+
 
     /**
      * sat solver configuration Configure
      *
      * @param solver
      */
-    private void configureSatSolver(WeightedMaxSatDecorator solver) {
+    private void configureSatSolver(ISolver solver) {
         final int totalVars = (slotManager.getNumberOfSlots() * lattice.numTypes);
         final int totalClauses = hardClauses.size() + softClauses.size();
 
@@ -249,27 +261,12 @@ public class MaxSatBackEnd extends BackEnd<VecInt[], VecInt[]> {
 
     protected void countVariables() {
 
-        Set<Integer> vars = new HashSet<Integer>();
+        Set<Integer> vars = new HashSet<>();
         for (VecInt vi : hardClauses) {
             for (int i : vi.toArray()) {
                 vars.add(i);
             }
         }
         StatisticPrinter.record(StatisticKey.CNF_VARIABLE_SIZE, (long) vars.size());
-    }
-
-    /**
-     * print all soft and hard clauses for testing.
-     */
-    protected void printClauses() {
-        System.out.println("Hard clauses: ");
-        for (VecInt hardClause : hardClauses) {
-            System.out.println(hardClause);
-        }
-        System.out.println();
-        System.out.println("Soft clauses: ");
-        for (VecInt softClause : softClauses) {
-            System.out.println(softClause);
-        }
     }
 }
